@@ -1,0 +1,4 @@
+images/
+venv/
+__pycache__/
+video*.mp4
