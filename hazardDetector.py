@@ -1,5 +1,5 @@
-import base64
 import json
+import random
 import time
 import cv2
 import torch
@@ -127,9 +127,10 @@ def estimate_scale_from_human(human: ObjectDetected, depth_map, real_height_m=1.
     return scale
 
 def publish_and_store_alert(alert_data: dict):
-    cv2.imwrite(alert_data["imageUrl"], alert_data["image"])
+    cv2.imwrite(f".{alert_data['imageUrl']}", alert_data["image"])
 
     # Publier dans Kafka
+    alert_data.pop("image", None)
     producer.produce(KAFKA_TOPIC, json.dumps(alert_data).encode("utf-8"))
     producer.flush()
 
@@ -140,7 +141,7 @@ def publish_and_store_alert(alert_data: dict):
         camera_name=alert_data["cameraName"],
         timestamp=alert_data["timestamp"],
         image_url=alert_data["imageUrl"],
-        distance=alert_data["distance"],
+        distance=float(alert_data["distance"]),
         description=alert_data["description"]
     )
     db.add(db_alert)
@@ -191,8 +192,9 @@ def detect_forklift_and_human(camera_id, camera_name, video_path = './video3.mp4
                 # _, buffer = cv2.imencode('.jpg', frame)
                 # img_base64 = base64.b64encode(buffer).decode("utf-8")
                 filename = f"{camera_id}_{int(time.time() * 1000)}.jpg"
-                filepath = f"./images/{filename}"
+                filepath = f"/images/{filename}"
                 alert = {
+                    "id": f"{camera_id}_{int(time.time())}_{random.randint(0, 9999)}",
                     "cameraId": camera_id, 
                     "cameraName": camera_name, 
                     "timestamp": int(time.time() * 1000),
@@ -204,11 +206,11 @@ def detect_forklift_and_human(camera_id, camera_name, video_path = './video3.mp4
                 publish_and_store_alert(alert)
                 
         # Affichage
-        # for obj in objects_detected:
-        #     cv2.rectangle(frame, (int(obj.x1), int(obj.y1)), (int(obj.x2), int(obj.y2)), color, 2)
-        # cv2.imshow("Flux RTSP", frame)
-        # if cv2.waitKey(wait_time) & 0xFF == ord('q'):
-        #     break
+        for obj in objects_detected:
+            cv2.rectangle(frame, (int(obj.x1), int(obj.y1)), (int(obj.x2), int(obj.y2)), color, 2)
+        cv2.imshow("Flux RTSP", frame)
+        if cv2.waitKey(wait_time) & 0xFF == ord('q'):
+            break
 
     stream.stop()
     cv2.destroyAllWindows()

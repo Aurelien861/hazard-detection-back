@@ -89,18 +89,6 @@ class CameraManager:
             if not ret:
                 time.sleep(1)
                 continue
-            # if randint(0, 250) < 2:
-            #     print(f"🚨 Alert triggered for camera {camera_id}")
-            #     alert = {
-            #         "cameraId": camera_id, 
-            #         "cameraName": self.cameras[camera_id]["name"], 
-            #         "timestamp": int(time.time() * 1000),
-            #         "imageUrl": "/placeholder.svg?height=200&width=300&query=warehouse safety violation",
-            #         "distance": 1.5,
-            #         "description": "Piéton a traversé le passage d'un chariot élévateur actif"
-            #     }
-            #     producer.produce(KAFKA_TOPIC, json.dumps(alert).encode("utf-8"))
-            #     producer.flush()
             with self.lock:
                 self.cameras[camera_id]["frame"] = frame
             time.sleep(0.03)
@@ -156,12 +144,6 @@ async def start_stream(request: Request):
         raise HTTPException(status_code=400, detail="Invalid RTSP URL or camera unreachable")
 
     camera_manager.start_camera(camera_id, rtsp_url, name)
-
-    # Lancer la détection dans un thread pour ne pas bloquer
-    # def background_detection():
-    #     detect_forklift_and_human(camera_id, name, video_path=rtsp_url,  threshold=2.5, conf=0.25)
-
-    # threading.Thread(target=background_detection, daemon=True).start()
 
     return {"status": "stream started"}
 

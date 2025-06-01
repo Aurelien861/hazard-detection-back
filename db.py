@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from alertModel import Base
 
-DATABASE_URL = "postgresql://user:password@db:5432/alerts_db"
+DATABASE_URL = "postgresql://user:password@localhost:5432/alerts_db"
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
