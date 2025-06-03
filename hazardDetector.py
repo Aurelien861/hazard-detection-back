@@ -148,6 +148,16 @@ def publish_and_store_alert(alert_data: dict):
     db.commit()
     db.close()
 
+def display_depth_map(depth_map):
+    depth_normalized = cv2.normalize(depth_map, None, 0, 255, cv2.NORM_MINMAX)
+    depth_uint8 = depth_normalized.astype(np.uint8)
+
+    depth_colormap = cv2.applyColorMap(depth_uint8, cv2.COLORMAP_PLASMA)
+
+    cv2.imshow("Carte de profondeur", depth_colormap)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()   
+
 def detect_forklift_and_human(camera_id, camera_name, video_path = './video3.mp4', threshold=3, conf=0.25, stop_event=None):
     model = torch.hub.load('ultralytics/yolov5', 'custom', path='best.pt')
     model.conf = conf
@@ -176,6 +186,7 @@ def detect_forklift_and_human(camera_id, camera_name, video_path = './video3.mp4
         if humans:
             print("Humain détecté, estimation de l'échelle...")
             depht_map = get_depth_map(frame, midas, transform)
+            # display_depth_map(depht_map)
             scale = estimate_scale_from_human(humans[0], depht_map)
 
         if scale is not None:    
@@ -206,11 +217,11 @@ def detect_forklift_and_human(camera_id, camera_name, video_path = './video3.mp4
                 publish_and_store_alert(alert)
                 
         # Affichage
-        for obj in objects_detected:
-            cv2.rectangle(frame, (int(obj.x1), int(obj.y1)), (int(obj.x2), int(obj.y2)), color, 2)
-        cv2.imshow("Flux RTSP", frame)
-        if cv2.waitKey(wait_time) & 0xFF == ord('q'):
-            break
+        # for obj in objects_detected:
+        #     cv2.rectangle(frame, (int(obj.x1), int(obj.y1)), (int(obj.x2), int(obj.y2)), color, 2)
+        # cv2.imshow("Flux RTSP", frame)
+        # if cv2.waitKey(wait_time) & 0xFF == ord('q'):
+        #     break
 
     stream.stop()
     cv2.destroyAllWindows()
